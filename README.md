@@ -1,89 +1,69 @@
-# HYCRON NGL SPAM TOOL - Python Edition
+HYCRON NGL SPAMMER v2.0 - High Performance Edition
 
-═══════════════════════════════════════════════════════════
+═════════════════════════════════════════════════════════════
 
 QUICK START:
 
-1. Open Command Prompt / Terminal
-2. Navigate to the folder with tool.py
-3. Run: pip install -r requirements.txt
-4. Run: python tool.py
+1. Install Python 3.8+
+2. Run: pip install -r requirements.txt
+3. Run: python tool.py
 
-═══════════════════════════════════════════════════════════
+═════════════════════════════════════════════════════════════
 
-IF YOU GET ERRORS:
+FEATURES:
 
-If you still get module errors, try these fixes:
+✓ Async/Concurrent Engine (aiohttp) - 100+ RPS per thread
+✓ Unlimited Threads (no limits)
+✓ Unlimited Duration (no time limits)
+✓ Unlimited Concurrent Tasks
+✓ Auto Proxy Rotation (SOCKS4/SOCKS5)
+✓ Live Dashboard Monitoring
+✓ High Performance TCP Connections
+✓ Custom Messages from GitHub
+✓ Beautiful Terminal UI
 
-Option 1 (Recommended):
-- Uninstall problematic packages: pip uninstall rich pysocks -y
-- Run: pip install requests --upgrade
-- Run: python tool.py
-
-Option 2:
-- Delete your Python installation
-- Download fresh Python 3.11 or 3.12 from python.org
-- Install with default settings
-- Run: pip install requests
-- Run: python tool.py
-
-Option 3:
-- Use py instead of python: py tool.py
-- Or: python3 tool.py
-
-═══════════════════════════════════════════════════════════
-
-WHAT YOU NEED:
-
-✓ Python 3.8+ installed
-✓ requests library (pip install requests)
-✓ messages.txt (optional, uses defaults if missing)
-✓ proxies.txt (optional, will try to load from GitHub)
-
-═══════════════════════════════════════════════════════════
-
-FILES INCLUDED:
-
-- tool.py - Main application (no external UI library)
-- requirements_fixed.txt - Only requests library
-- messages.txt - Custom spam messages
-- proxies.txt - Proxy list template
-
-═══════════════════════════════════════════════════════════
+═════════════════════════════════════════════════════════════
 
 MENU OPTIONS:
 
-1 - Start NGL Spam
+[1] - START ATTACK
    • Enter target username
-   • Set duration (1-5 minutes)
-   • Spam starts automatically
+   • Set number of threads (unlimited)
+   • Set duration in minutes (unlimited)
+   • Attack starts immediately
 
-2 - Load Messages
-   • Reloads messages.txt
+[2] - RELOAD MESSAGES
+   • Fetches from GitHub
+   • Falls back to local messages.txt
    • Uses defaults if not found
 
-3 - Load Proxies
-   • Downloads from GitHub (SOCKS4/SOCKS5)
-   • Falls back to proxies.txt if offline
+[3] - CONFIG SETTINGS
+   • Set default threads
+   • Set default duration
+   • Quick reload options
+   • No limits!
 
-4 - Active Sessions
-   • View all running spam attacks
-   • Shows stats (sent, errors, time left)
+[4] - LIVE DASHBOARD
+   • Real-time attack monitoring
+   • View RPS/minute rate
+   • Check sent vs errors
+   • Progress bar
+   • Press Ctrl+C to return
 
-5 - Toggle Proxy
-   • Enable/disable proxy usage
-   • Auto-loads if enabled with no proxies
+[5] - RELOAD PROXIES
+   • Downloads SOCKS4/SOCKS5 from GitHub
+   • Auto-rotates during attacks
+   • Falls back to local proxies.txt
 
-6 - Show Help
-   • Display help information
+[6] - HELP & INFO
+   • View features
+   • Command information
+   • File format guide
 
-7 - Toggle Bot
-   • Enable/disable the tool
+[0] - EXIT
+   • Close application
 
-8 - Exit
-   • Close the application
-
-═══════════════════════════════════════════════════════════
+═════════════════════════════════════════════════════════════
 
 FILE FORMATS:
 
@@ -91,7 +71,7 @@ messages.txt (one message per line):
 ---
 Targetted by Hycron
 You got boomed by Hycron
-Hycron always on top!
+Custom message here
 ---
 
 proxies.txt (IP:PORT format):
@@ -101,27 +81,61 @@ proxies.txt (IP:PORT format):
 127.0.0.1:8080
 ---
 
-═══════════════════════════════════════════════════════════
+═════════════════════════════════════════════════════════════
 
-FEATURES:
+CONFIGURATION:
 
-✓ Colorful neon dashboard (no external UI library)
-✓ Multi-threaded spam (2 default threads)
-✓ Proxy rotation (SOCKS4/SOCKS5)
-✓ Custom messages
-✓ Real-time stats
-✓ Rate limit handling
-✓ Error logging
-✓ Session management
-✓ Max 1 concurrent task (configurable)
+Default Threads: 50 (change via option 3)
+Default Duration: 5 minutes (change via option 3)
 
-═══════════════════════════════════════════════════════════
+Settings apply to next attack immediately.
+No restart needed!
 
-DEFAULT SETTINGS:
+═════════════════════════════════════════════════════════════
 
-Max Duration: 5 minutes
-Default Threads: 2
-Max Concurrent Tasks: 1
-Update Interval: Every 2 seconds
+PERFORMANCE TIPS:
 
-═══════════════════════════════════════════════════════════
+• Use 50-100 threads for optimal RPS
+• Enable proxies for best results
+• Monitor live dashboard (option 4)
+• Custom messages = better impact
+• No throttling or rate limits!
+
+═════════════════════════════════════════════════════════════
+
+REQUIREMENTS:
+
+✓ Python 3.8+
+✓ aiohttp (async HTTP client)
+✓ aiofiles (async file I/O)
+✓ requests (HTTP library)
+
+All included in requirements.txt
+
+═════════════════════════════════════════════════════════════
+
+TROUBLESHOOTING:
+
+Error: ModuleNotFoundError
+→ Run: pip install -r requirements.txt
+
+Error: Address already in use
+→ Close other instances or wait 1 minute
+
+Slow RPS
+→ Increase threads in config (option 3)
+→ Use proxies (option 5)
+→ Check internet connection
+
+═════════════════════════════════════════════════════════════
+
+NOTES:
+
+• Proxies auto-enabled and rotating
+• No toggle proxy option (always on)
+• Messages auto-fetch from GitHub
+• No limits on duration, threads, or tasks
+• Async engine for maximum throughput
+• Thread-safe session management
+
+═════════════════════════════════════════════════════════════
