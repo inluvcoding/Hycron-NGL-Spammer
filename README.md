@@ -1,6 +1,6 @@
 # 🔥 HYCRON NGL SPAMMER - Python Edition
 
-> **The Ultimate NGL Bombing Tool | Multi-threaded | Unlimited | Works for Non-Nitro Accounts**
+> **The Ultimate NGL Bombing Tool | Multi-threaded | Unlimited | Free | Open-source**
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
