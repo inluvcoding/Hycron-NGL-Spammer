@@ -30,7 +30,6 @@ class Colors:
 class NGLSpamTool:
     def __init__(self):
         self.active_sessions = {}
-        self.bot_enabled = True
         self.use_proxy = False
         self.proxies = []
         self.current_proxy_index = 0
@@ -250,7 +249,7 @@ class NGLSpamTool:
 ║                                                 ║
 ║  {Colors.CYAN}1{Colors.YELLOW}. Start NGL Spam          {Colors.CYAN}5{Colors.YELLOW}. Toggle Proxy      ║
 ║  {Colors.CYAN}2{Colors.YELLOW}. Load Messages         {Colors.CYAN}6{Colors.YELLOW}. Show Help        ║
-║  {Colors.CYAN}3{Colors.YELLOW}. Load Proxies          {Colors.CYAN}7{Colors.YELLOW}. Toggle Bot       ║
+║  {Colors.CYAN}3{Colors.YELLOW}. Load Proxies          {Colors.CYAN}7{Colors.YELLOW}. Config Settings  ║
 ║  {Colors.CYAN}4{Colors.YELLOW}. Active Sessions       {Colors.CYAN}8{Colors.YELLOW}. Exit              ║
 ║                                                 ║
 ╚═════════════════════════════════════════════════╝
@@ -359,8 +358,13 @@ class NGLSpamTool:
   4 - View all active sessions
   5 - Toggle proxy usage on/off
   6 - Show this help menu
-  7 - Toggle bot on/off
+  7 - Configure tool settings (threads, duration, etc)
   8 - Exit application
+
+{Colors.MAGENTA}Config Settings:{Colors.CYAN}
+  • Max Duration - Maximum time for spam (1-∞ minutes)
+  • Default Threads - Number of threads per spam (1-10)
+  • Max Concurrent Tasks - Run multiple spams (1-5)
 
 {Colors.MAGENTA}Files:{Colors.CYAN}
   messages.txt - Add custom messages (one per line)
@@ -378,6 +382,7 @@ class NGLSpamTool:
   ✓ Real-time status tracking
   ✓ Automatic proxy rotation
   ✓ Rate limiting handling
+  ✓ Configurable settings
 
 ╚═════════════════════════════════════════════════╝
 {Colors.END}""")
@@ -392,11 +397,61 @@ class NGLSpamTool:
             self.load_proxies()
         time.sleep(2)
 
-    def toggle_bot(self):
-        self.bot_enabled = not self.bot_enabled
-        status = f"{Colors.GREEN}ENABLED{Colors.END}" if self.bot_enabled else f"{Colors.RED}DISABLED{Colors.END}"
-        print(f"\n{Colors.CYAN}Bot Status: {status}{Colors.END}\n")
-        time.sleep(1)
+    def config_settings(self):
+        print(f"\n{Colors.BOLD}{Colors.CYAN}═══════════════════════════════════════════════════{Colors.END}")
+        print(f"{Colors.BOLD}{Colors.MAGENTA}              CONFIG SETTINGS{Colors.END}")
+        print(f"{Colors.BOLD}{Colors.CYAN}═══════════════════════════════════════════════════{Colors.END}\n")
+        
+        print(f"{Colors.YELLOW}Current Configuration:{Colors.END}\n")
+        print(f"{Colors.CYAN}1. Max Duration:{Colors.END} {Colors.GREEN}{self.max_duration}{Colors.END} minutes")
+        print(f"{Colors.CYAN}2. Default Threads:{Colors.END} {Colors.GREEN}{self.default_threads}{Colors.END} threads")
+        print(f"{Colors.CYAN}3. Max Concurrent Tasks:{Colors.END} {Colors.GREEN}{self.max_concurrent_tasks}{Colors.END} task(s)")
+        print(f"{Colors.CYAN}4. Back to Menu{Colors.END}\n")
+        
+        choice = input(f"{Colors.BOLD}{Colors.MAGENTA}▶ Select option to configure: {Colors.END}").strip()
+        
+        if choice == '1':
+            try:
+                new_duration = int(input(f"{Colors.CYAN}Enter max duration in minutes (current: {self.max_duration}): {Colors.END}"))
+                if new_duration > 0:
+                    self.max_duration = new_duration
+                    print(f"{Colors.GREEN}✓ Max duration updated to {self.max_duration} minutes{Colors.END}\n")
+                else:
+                    print(f"{Colors.RED}✗ Duration must be greater than 0{Colors.END}\n")
+            except ValueError:
+                print(f"{Colors.RED}✗ Invalid input{Colors.END}\n")
+            time.sleep(1)
+        
+        elif choice == '2':
+            try:
+                new_threads = int(input(f"{Colors.CYAN}Enter default threads (current: {self.default_threads}): {Colors.END}"))
+                if new_threads > 0 and new_threads <= 10:
+                    self.default_threads = new_threads
+                    print(f"{Colors.GREEN}✓ Default threads updated to {self.default_threads}{Colors.END}\n")
+                else:
+                    print(f"{Colors.RED}✗ Threads must be between 1 and 10{Colors.END}\n")
+            except ValueError:
+                print(f"{Colors.RED}✗ Invalid input{Colors.END}\n")
+            time.sleep(1)
+        
+        elif choice == '3':
+            try:
+                new_concurrent = int(input(f"{Colors.CYAN}Enter max concurrent tasks (current: {self.max_concurrent_tasks}): {Colors.END}"))
+                if new_concurrent > 0 and new_concurrent <= 5:
+                    self.max_concurrent_tasks = new_concurrent
+                    print(f"{Colors.GREEN}✓ Max concurrent tasks updated to {self.max_concurrent_tasks}{Colors.END}\n")
+                else:
+                    print(f"{Colors.RED}✗ Concurrent tasks must be between 1 and 5{Colors.END}\n")
+            except ValueError:
+                print(f"{Colors.RED}✗ Invalid input{Colors.END}\n")
+            time.sleep(1)
+        
+        elif choice == '4':
+            return
+        
+        else:
+            print(f"{Colors.RED}✗ Invalid option{Colors.END}\n")
+            time.sleep(1)
 
     def run(self):
         while True:
@@ -408,10 +463,6 @@ class NGLSpamTool:
                 choice = input(f"{Colors.BOLD}{Colors.MAGENTA}▶ Select option: {Colors.END}").strip()
                 
                 if choice == '1':
-                    if not self.bot_enabled:
-                        print(f"{Colors.RED}✗ Bot is disabled{Colors.END}\n")
-                        time.sleep(2)
-                        continue
                     self.start_spam()
                 
                 elif choice == '2':
@@ -430,7 +481,7 @@ class NGLSpamTool:
                     self.show_help()
                 
                 elif choice == '7':
-                    self.toggle_bot()
+                    self.config_settings()
                 
                 elif choice == '8':
                     print(f"\n{Colors.MAGENTA}Goodbye!{Colors.END}\n")
