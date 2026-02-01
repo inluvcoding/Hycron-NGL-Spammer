@@ -1,4 +1,4 @@
-HYCRON NGL SPAMMER v2.0 - High Performance Edition
+# HYCRON NGL SPAMMER v1 - High Performance Edition
 
 ═════════════════════════════════════════════════════════════
 
