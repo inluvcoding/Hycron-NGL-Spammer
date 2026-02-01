@@ -9,21 +9,26 @@ import json
 from datetime import datetime
 from urllib.parse import urlencode
 from collections import defaultdict
-from rich.console import Console
-from rich.layout import Layout
-from rich.panel import Panel
-from rich.table import Table
-from rich.text import Text
-from rich.live import Live
-from rich.align import Align
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from pysocks import ProxyError
-import socks
-import socket
+
+class Colors:
+    MAGENTA = '\033[95m'
+    CYAN = '\033[96m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    WHITE = '\033[97m'
+    BLACK = '\033[90m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
+    
+    BRIGHT_MAGENTA = '\033[105m'
+    BRIGHT_CYAN = '\033[106m'
+    BRIGHT_GREEN = '\033[102m'
 
 class NGLSpamTool:
     def __init__(self):
-        self.console = Console()
         self.active_sessions = {}
         self.bot_enabled = True
         self.use_proxy = False
@@ -42,25 +47,36 @@ class NGLSpamTool:
         
         self.load_custom_messages()
 
+    def print_header(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print(f"""{Colors.BOLD}{Colors.MAGENTA}
+╔═══════════════════════════════════════════════════╗
+║                                                   ║
+║         HYCRON NGL SPAM TOOL v1.0                 ║
+║      Advanced Message Delivery System             ║
+║                                                   ║
+╚═══════════════════════════════════════════════════╝
+{Colors.END}""")
+
     def load_custom_messages(self):
         try:
             if os.path.exists('messages.txt'):
-                with open('messages.txt', 'r') as f:
+                with open('messages.txt', 'r', encoding='utf-8') as f:
                     messages = [line.strip() for line in f if line.strip()]
                 if messages:
                     self.custom_messages = messages
-                    self.console.print(f"[cyan]✓ Loaded {len(self.custom_messages)} custom messages[/cyan]")
+                    print(f"{Colors.CYAN}✓ Loaded {len(self.custom_messages)} custom messages{Colors.END}")
                     return True
                 else:
                     self.custom_messages = self.default_messages
-                    self.console.print("[yellow]⚠ messages.txt is empty, using defaults[/yellow]")
+                    print(f"{Colors.YELLOW}⚠ messages.txt is empty, using defaults{Colors.END}")
                     return False
             else:
                 self.custom_messages = self.default_messages
-                self.console.print("[yellow]⚠ messages.txt not found, using defaults[/yellow]")
+                print(f"{Colors.YELLOW}⚠ messages.txt not found, using defaults{Colors.END}")
                 return False
         except Exception as e:
-            self.console.print(f"[red]✗ Error loading messages: {e}[/red]")
+            print(f"{Colors.RED}✗ Error loading messages: {e}{Colors.END}")
             self.custom_messages = self.default_messages
             return False
 
@@ -70,7 +86,7 @@ class NGLSpamTool:
 
     def load_proxies(self):
         try:
-            self.console.print("[cyan]⟳ Fetching proxies from GitHub...[/cyan]")
+            print(f"{Colors.CYAN}⟳ Fetching proxies from GitHub...{Colors.END}")
             
             socks5_url = 'https://github.com/monosans/proxy-list/raw/refs/heads/main/proxies/socks5.txt'
             socks4_url = 'https://github.com/monosans/proxy-list/raw/refs/heads/main/proxies/socks4.txt'
@@ -84,7 +100,7 @@ class NGLSpamTool:
                                      for line in response.text.split('\n') 
                                      if ':' in line.strip()]
                     all_proxies.extend(socks5_proxies)
-                    self.console.print(f"[cyan]✓ Loaded {len(socks5_proxies)} SOCKS5 proxies[/cyan]")
+                    print(f"{Colors.CYAN}✓ Loaded {len(socks5_proxies)} SOCKS5 proxies{Colors.END}")
             except:
                 pass
             
@@ -95,29 +111,29 @@ class NGLSpamTool:
                                      for line in response.text.split('\n') 
                                      if ':' in line.strip()]
                     all_proxies.extend(socks4_proxies)
-                    self.console.print(f"[cyan]✓ Loaded {len(socks4_proxies)} SOCKS4 proxies[/cyan]")
+                    print(f"{Colors.CYAN}✓ Loaded {len(socks4_proxies)} SOCKS4 proxies{Colors.END}")
             except:
                 pass
             
             random.shuffle(all_proxies)
             self.proxies = all_proxies
-            self.console.print(f"[cyan]✓ Total proxies: {len(self.proxies)}[/cyan]")
+            print(f"{Colors.CYAN}✓ Total proxies: {len(self.proxies)}{Colors.END}")
             
             if len(self.proxies) == 0 and os.path.exists('proxies.txt'):
                 with open('proxies.txt', 'r') as f:
                     local_proxies = [{'proxy': line.strip(), 'type': 'auto'} 
                                     for line in f if ':' in line.strip()]
                 self.proxies = local_proxies
-                self.console.print(f"[cyan]✓ Loaded {len(self.proxies)} proxies from local file[/cyan]")
+                print(f"{Colors.CYAN}✓ Loaded {len(self.proxies)} proxies from local file{Colors.END}")
         
         except Exception as e:
-            self.console.print(f"[red]✗ Error loading proxies: {e}[/red]")
+            print(f"{Colors.RED}✗ Error loading proxies: {e}{Colors.END}")
             if os.path.exists('proxies.txt'):
                 with open('proxies.txt', 'r') as f:
                     local_proxies = [{'proxy': line.strip(), 'type': 'auto'} 
                                     for line in f if ':' in line.strip()]
                 self.proxies = local_proxies
-                self.console.print(f"[cyan]✓ Fallback: Loaded {len(self.proxies)} proxies from local file[/cyan]")
+                print(f"{Colors.CYAN}✓ Fallback: Loaded {len(self.proxies)} proxies from local file{Colors.END}")
 
     def get_next_proxy(self):
         if not self.proxies:
@@ -125,20 +141,6 @@ class NGLSpamTool:
         proxy_obj = self.proxies[self.current_proxy_index]
         self.current_proxy_index = (self.current_proxy_index + 1) % len(self.proxies)
         return proxy_obj
-
-    def create_proxy_session(self, proxy_obj):
-        try:
-            proxy, ptype = proxy_obj['proxy'], proxy_obj['type']
-            session = requests.Session()
-            
-            if ptype == 'socks5':
-                session.proxies = {'http': f'socks5://{proxy}', 'https': f'socks5://{proxy}'}
-            else:
-                session.proxies = {'http': f'socks4://{proxy}', 'https': f'socks4://{proxy}'}
-            
-            return session
-        except Exception as e:
-            return None
 
     def send_ngl_message(self, username, session_id, thread_id):
         session_data = self.active_sessions.get(session_id)
@@ -169,27 +171,35 @@ class NGLSpamTool:
                     'referrer': ''
                 }
                 
+                proxies_dict = None
                 if self.use_proxy and self.proxies:
                     proxy_obj = self.get_next_proxy()
-                    session = self.create_proxy_session(proxy_obj)
-                    if session:
-                        response = session.post(url, headers=headers, data=data, timeout=10)
+                    if proxy_obj:
+                        proxy_url = f"http://{proxy_obj['proxy']}"
+                        proxies_dict = {'http': proxy_url, 'https': proxy_url}
+                
+                try:
+                    if proxies_dict:
+                        response = requests.post(url, headers=headers, data=data, timeout=10, proxies=proxies_dict)
                     else:
                         response = requests.post(url, headers=headers, data=data, timeout=10)
-                else:
-                    response = requests.post(url, headers=headers, data=data, timeout=10)
+                    
+                    if response.status_code == 429:
+                        session_data['errors'] += 1
+                        session_data['last_error'] = 'Rate Limited'
+                        time.sleep(25)
+                    elif response.status_code != 200:
+                        session_data['errors'] += 1
+                        session_data['last_error'] = f'HTTP {response.status_code}'
+                        time.sleep(5)
+                    else:
+                        session_data['sent'] += 1
+                        session_data['last_success'] = time.time()
                 
-                if response.status_code == 429:
+                except Exception as req_error:
                     session_data['errors'] += 1
-                    session_data['last_error'] = 'Rate Limited'
-                    time.sleep(25)
-                elif response.status_code != 200:
-                    session_data['errors'] += 1
-                    session_data['last_error'] = f'HTTP {response.status_code}'
+                    session_data['last_error'] = str(req_error)[:50]
                     time.sleep(5)
-                else:
-                    session_data['sent'] += 1
-                    session_data['last_success'] = time.time()
             
             except Exception as e:
                 session_data['errors'] += 1
@@ -200,12 +210,14 @@ class NGLSpamTool:
         if session_data['threads_completed'] >= session_data['threads']:
             session_data['active'] = False
 
-    def generate_status_table(self):
-        table = Table(title="[bold magenta]HYCRON NGL SPAM DASHBOARD[/bold magenta]", show_header=False, box=None)
+    def display_status(self):
+        print(f"\n{Colors.BOLD}{Colors.CYAN}═══════════════════════════════════════════════════{Colors.END}")
+        print(f"{Colors.BOLD}{Colors.MAGENTA}          ACTIVE SESSIONS{Colors.END}")
+        print(f"{Colors.BOLD}{Colors.CYAN}═══════════════════════════════════════════════════{Colors.END}\n")
         
         if not self.active_sessions:
-            table.add_row("[yellow]No active sessions[/yellow]")
-            return table
+            print(f"{Colors.YELLOW}No active sessions{Colors.END}\n")
+            return
         
         for session_id, session_data in list(self.active_sessions.items()):
             if not session_data['active'] and session_data['threads_completed'] >= session_data['threads']:
@@ -219,75 +231,56 @@ class NGLSpamTool:
             
             rate = (session_data['sent'] / elapsed * 60) if elapsed > 0 else 0
             proxy_status = f"Enabled ({len(self.proxies)})" if self.use_proxy else "Disabled"
-            status = "🔴 Spamming" if session_data['active'] else "🟢 Completed"
+            status = f"{Colors.RED}🔴 Spamming{Colors.END}" if session_data['active'] else f"{Colors.GREEN}🟢 Completed{Colors.END}"
             
-            content = f"""
-[bold cyan]Target:[/bold cyan] {session_data['username']}
-[bold cyan]Duration:[/bold cyan] {session_data['duration']}m | [bold cyan]Threads:[/bold cyan] {session_data['threads']}
-[bold green]Sent:[/bold green] {session_data['sent']} | [bold red]Errors:[/bold red] {session_data['errors']}
-[bold yellow]Time Left:[/bold yellow] {minutes}m {seconds}s | [bold magenta]Rate:[/bold magenta] {rate:.1f}/min
-[bold blue]Proxy:[/bold blue] {proxy_status} | [bold cyan]Status:[/bold cyan] {status}
-"""
+            print(f"{Colors.BOLD}{Colors.CYAN}Target:{Colors.END} {Colors.MAGENTA}{session_data['username']}{Colors.END}")
+            print(f"{Colors.BOLD}{Colors.CYAN}Duration:{Colors.END} {session_data['duration']}m | {Colors.BOLD}{Colors.CYAN}Threads:{Colors.END} {session_data['threads']}")
+            print(f"{Colors.BOLD}{Colors.GREEN}Sent:{Colors.END} {session_data['sent']} | {Colors.BOLD}{Colors.RED}Errors:{Colors.END} {session_data['errors']}")
+            print(f"{Colors.BOLD}{Colors.YELLOW}Time Left:{Colors.END} {minutes}m {seconds}s | {Colors.BOLD}{Colors.MAGENTA}Rate:{Colors.END} {rate:.1f}/min")
+            print(f"{Colors.BOLD}{Colors.BLUE}Proxy:{Colors.END} {proxy_status} | {Colors.BOLD}{Colors.CYAN}Status:{Colors.END} {status}")
             if session_data['last_error']:
-                content += f"[bold red]Last Error:[/bold red] {session_data['last_error']}\n"
-            
-            table.add_row(Panel(content, border_style="cyan", padding=(1, 2)))
-        
-        return table
+                print(f"{Colors.BOLD}{Colors.RED}Last Error:{Colors.END} {session_data['last_error']}")
+            print(f"{Colors.CYAN}─────────────────────────────────────────────────{Colors.END}\n")
 
-    def show_dashboard(self):
-        while True:
-            try:
-                os.system('clear' if os.name == 'posix' else 'cls')
-                
-                self.console.print("\n")
-                self.console.print(Panel(
-                    "[bold magenta]╔═══════════════════════════════════╗\n"
-                    "║  HYCRON NGL SPAM TOOL v1.0        ║\n"
-                    "║  Advanced Message Delivery System  ║\n"
-                    "╚═══════════════════════════════════╝[/bold magenta]",
-                    border_style="magenta"
-                ))
-                
-                self.console.print(self.generate_status_table())
-                
-                commands = """
-[bold yellow]╔════════════════════════════════════════╗[/bold yellow]
-[bold cyan]1.[/bold cyan] Start NGL Spam       [bold cyan]5.[/bold cyan] Toggle Proxy
-[bold cyan]2.[/bold cyan] Load Messages      [bold cyan]6.[/bold cyan] Show Help
-[bold cyan]3.[/bold cyan] Load Proxies       [bold cyan]7.[/bold cyan] Toggle Bot
-[bold cyan]4.[/bold cyan] Active Sessions    [bold cyan]8.[/bold cyan] Exit
-[bold yellow]╚════════════════════════════════════════╝[/bold yellow]
-"""
-                self.console.print(commands)
-                
-                break
-            except KeyboardInterrupt:
-                pass
-            
-            time.sleep(2)
+    def show_menu(self):
+        print(f"""{Colors.BOLD}{Colors.YELLOW}
+╔═════════════════════════════════════════════════╗
+║             MAIN MENU                           ║
+╠═════════════════════════════════════════════════╣
+║                                                 ║
+║  {Colors.CYAN}1{Colors.YELLOW}. Start NGL Spam          {Colors.CYAN}5{Colors.YELLOW}. Toggle Proxy      ║
+║  {Colors.CYAN}2{Colors.YELLOW}. Load Messages         {Colors.CYAN}6{Colors.YELLOW}. Show Help        ║
+║  {Colors.CYAN}3{Colors.YELLOW}. Load Proxies          {Colors.CYAN}7{Colors.YELLOW}. Toggle Bot       ║
+║  {Colors.CYAN}4{Colors.YELLOW}. Active Sessions       {Colors.CYAN}8{Colors.YELLOW}. Exit              ║
+║                                                 ║
+╚═════════════════════════════════════════════════╝
+{Colors.END}""")
 
     def start_spam(self):
-        self.console.print("\n[bold cyan]▶ Start NGL Spam[/bold cyan]\n")
+        print(f"\n{Colors.BOLD}{Colors.CYAN}▶ Start NGL Spam{Colors.END}\n")
         
-        username = self.console.input("[cyan]Target username:[/cyan] ").strip()
+        username = input(f"{Colors.CYAN}Target username: {Colors.END}").strip()
         if not username:
-            self.console.print("[red]✗ Username cannot be empty[/red]")
+            print(f"{Colors.RED}✗ Username cannot be empty{Colors.END}")
+            time.sleep(1)
             return
         
         try:
-            duration = int(self.console.input(f"[cyan]Duration in minutes (max {self.max_duration}):[/cyan] ").strip())
+            duration = int(input(f"{Colors.CYAN}Duration in minutes (max {self.max_duration}): {Colors.END}").strip())
         except ValueError:
-            self.console.print("[red]✗ Duration must be a number[/red]")
+            print(f"{Colors.RED}✗ Duration must be a number{Colors.END}")
+            time.sleep(1)
             return
         
         if duration <= 0 or duration > self.max_duration:
-            self.console.print(f"[red]✗ Duration must be between 1 and {self.max_duration} minutes[/red]")
+            print(f"{Colors.RED}✗ Duration must be between 1 and {self.max_duration} minutes{Colors.END}")
+            time.sleep(1)
             return
         
         user_active = [s for s in self.active_sessions.values() if s['active']]
         if len(user_active) >= self.max_concurrent_tasks:
-            self.console.print(f"[red]✗ Maximum {self.max_concurrent_tasks} concurrent task(s) allowed[/red]")
+            print(f"{Colors.RED}✗ Maximum {self.max_concurrent_tasks} concurrent task(s) allowed{Colors.END}")
+            time.sleep(1)
             return
         
         session_id = f"{time.time()}-{random.randint(1000, 9999)}"
@@ -311,128 +304,112 @@ class NGLSpamTool:
         
         self.active_sessions[session_id] = session_data
         
-        self.console.print(f"\n[green]✓ Starting spam on @{username}[/green]")
-        self.console.print(f"[cyan]Duration: {duration}m | Threads: {self.default_threads}[/cyan]\n")
+        print(f"\n{Colors.GREEN}✓ Starting spam on @{username}{Colors.END}")
+        print(f"{Colors.CYAN}Duration: {duration}m | Threads: {self.default_threads}{Colors.END}\n")
         
         for i in range(self.default_threads):
             thread = threading.Thread(target=self.send_ngl_message, args=(username, session_id, i), daemon=True)
             thread.start()
         
-        time.sleep(1)
+        time.sleep(2)
 
     def reload_messages(self):
         self.load_custom_messages()
-        self.console.print("[green]✓ Messages reloaded[/green]\n")
-        time.sleep(1)
+        print(f"{Colors.GREEN}✓ Messages reloaded{Colors.END}\n")
+        time.sleep(2)
 
     def load_proxies_menu(self):
         self.load_proxies()
         if self.proxies:
-            self.console.print(f"[green]✓ Proxies loaded: {len(self.proxies)}[/green]\n")
+            print(f"{Colors.GREEN}✓ Proxies loaded: {len(self.proxies)}{Colors.END}\n")
         else:
-            self.console.print("[red]✗ Failed to load proxies[/red]\n")
+            print(f"{Colors.RED}✗ Failed to load proxies{Colors.END}\n")
         time.sleep(2)
 
     def show_active_sessions(self):
         if not self.active_sessions:
-            self.console.print("\n[yellow]No active sessions[/yellow]\n")
+            print(f"\n{Colors.YELLOW}No active sessions{Colors.END}\n")
             time.sleep(1)
             return
         
-        table = Table(title="[bold cyan]Active Sessions[/bold cyan]")
-        table.add_column("Username", style="cyan")
-        table.add_column("Sent", style="green")
-        table.add_column("Errors", style="red")
-        table.add_column("Status", style="yellow")
+        print(f"\n{Colors.BOLD}{Colors.CYAN}═══════════════════════════════════════════════════{Colors.END}")
+        print(f"{Colors.BOLD}{Colors.CYAN}              ACTIVE SESSIONS{Colors.END}")
+        print(f"{Colors.BOLD}{Colors.CYAN}═══════════════════════════════════════════════════{Colors.END}\n")
+        
+        print(f"{Colors.BOLD}{Colors.CYAN}{'Username':<20} {'Sent':<10} {'Errors':<10} {'Status':<15}{Colors.END}")
+        print(f"{Colors.CYAN}─────────────────────────────────────────────────{Colors.END}")
         
         for session_data in self.active_sessions.values():
-            status = "🔴 Active" if session_data['active'] else "🟢 Done"
-            table.add_row(
-                session_data['username'],
-                str(session_data['sent']),
-                str(session_data['errors']),
-                status
-            )
+            status = f"{Colors.RED}🔴 Active{Colors.END}" if session_data['active'] else f"{Colors.GREEN}🟢 Done{Colors.END}"
+            print(f"{session_data['username']:<20} {session_data['sent']:<10} {session_data['errors']:<10} {status:<15}")
         
-        self.console.print("\n")
-        self.console.print(table)
-        self.console.print()
+        print()
         time.sleep(2)
 
     def show_help(self):
-        help_text = """
-[bold cyan]╔════════════════════════════════════════╗[/bold cyan]
-[bold yellow]HYCRON NGL SPAM TOOL - HELP[/bold yellow]
-[bold cyan]╠════════════════════════════════════════╣[/bold cyan]
+        print(f"""{Colors.BOLD}{Colors.CYAN}
+╔═════════════════════════════════════════════════╗
+║         HYCRON NGL SPAM TOOL - HELP             ║
+╠═════════════════════════════════════════════════╣
 
-[bold magenta]Commands:[/bold magenta]
-  [cyan]1[/cyan] - Start spamming a target
-  [cyan]2[/cyan] - Load custom messages from messages.txt
-  [cyan]3[/cyan] - Load proxies (SOCKS4/SOCKS5)
-  [cyan]4[/cyan] - View all active sessions
-  [cyan]5[/cyan] - Toggle proxy usage on/off
-  [cyan]6[/cyan] - Show this help menu
-  [cyan]7[/cyan] - Toggle bot on/off
-  [cyan]8[/cyan] - Exit application
+{Colors.MAGENTA}Commands:{Colors.CYAN}
+  1 - Start spamming a target
+  2 - Load custom messages from messages.txt
+  3 - Load proxies (SOCKS4/SOCKS5)
+  4 - View all active sessions
+  5 - Toggle proxy usage on/off
+  6 - Show this help menu
+  7 - Toggle bot on/off
+  8 - Exit application
 
-[bold magenta]Files:[/bold magenta]
-  [cyan]messages.txt[/cyan] - Add custom messages (one per line)
-  [cyan]proxies.txt[/cyan] - Add local proxies (IP:PORT format)
+{Colors.MAGENTA}Files:{Colors.CYAN}
+  messages.txt - Add custom messages (one per line)
+  proxies.txt - Add local proxies (IP:PORT format)
 
-[bold magenta]Requirements:[/bold magenta]
-  [cyan]messages.txt[/cyan] - Optional (defaults provided)
-  [cyan]proxies.txt[/cyan] - Optional (downloads from GitHub)
+{Colors.MAGENTA}Requirements:{Colors.CYAN}
+  messages.txt - Optional (defaults provided)
+  proxies.txt - Optional (downloads from GitHub)
 
-[bold cyan]╚════════════════════════════════════════╝[/bold cyan]
-"""
-        self.console.print(help_text)
-        time.sleep(3)
+{Colors.MAGENTA}Features:{Colors.CYAN}
+  ✓ Colorful neon dashboard
+  ✓ Multi-threaded spam attacks
+  ✓ SOCKS4/SOCKS5 proxy support
+  ✓ Custom message loading
+  ✓ Real-time status tracking
+  ✓ Automatic proxy rotation
+  ✓ Rate limiting handling
+
+╚═════════════════════════════════════════════════╝
+{Colors.END}""")
+        time.sleep(4)
 
     def toggle_proxy(self):
         self.use_proxy = not self.use_proxy
-        status = "[green]ENABLED[/green]" if self.use_proxy else "[red]DISABLED[/red]"
-        self.console.print(f"\n[cyan]Proxy Status: {status}[/cyan]\n")
+        status = f"{Colors.GREEN}ENABLED{Colors.END}" if self.use_proxy else f"{Colors.RED}DISABLED{Colors.END}"
+        print(f"\n{Colors.CYAN}Proxy Status: {status}{Colors.END}\n")
         if self.use_proxy and not self.proxies:
-            self.console.print("[yellow]Loading proxies...[/yellow]")
+            print(f"{Colors.YELLOW}Loading proxies...{Colors.END}")
             self.load_proxies()
         time.sleep(2)
 
     def toggle_bot(self):
         self.bot_enabled = not self.bot_enabled
-        status = "[green]ENABLED[/green]" if self.bot_enabled else "[red]DISABLED[/red]"
-        self.console.print(f"\n[cyan]Bot Status: {status}[/cyan]\n")
+        status = f"{Colors.GREEN}ENABLED{Colors.END}" if self.bot_enabled else f"{Colors.RED}DISABLED{Colors.END}"
+        print(f"\n{Colors.CYAN}Bot Status: {status}{Colors.END}\n")
         time.sleep(1)
 
     def run(self):
         while True:
             try:
-                os.system('clear' if os.name == 'posix' else 'cls')
+                self.print_header()
+                self.display_status()
+                self.show_menu()
                 
-                self.console.print(Panel(
-                    "[bold magenta]╔═══════════════════════════════════╗\n"
-                    "║  HYCRON NGL SPAM TOOL v1.0        ║\n"
-                    "║  Advanced Message Delivery System  ║\n"
-                    "╚═══════════════════════════════════╝[/bold magenta]",
-                    border_style="magenta"
-                ))
-                
-                self.console.print(self.generate_status_table())
-                
-                commands = """
-[bold yellow]╔════════════════════════════════════════╗[/bold yellow]
-[bold cyan]1.[/bold cyan] Start NGL Spam       [bold cyan]5.[/bold cyan] Toggle Proxy
-[bold cyan]2.[/bold cyan] Load Messages      [bold cyan]6.[/bold cyan] Show Help
-[bold cyan]3.[/bold cyan] Load Proxies       [bold cyan]7.[/bold cyan] Toggle Bot
-[bold cyan]4.[/bold cyan] Active Sessions    [bold cyan]8.[/bold cyan] Exit
-[bold yellow]╚════════════════════════════════════════╝[/bold yellow]
-"""
-                self.console.print(commands)
-                
-                choice = self.console.input("[bold magenta]▶ Select option:[/bold magenta] ").strip()
+                choice = input(f"{Colors.BOLD}{Colors.MAGENTA}▶ Select option: {Colors.END}").strip()
                 
                 if choice == '1':
                     if not self.bot_enabled:
-                        self.console.print("[red]✗ Bot is disabled[/red]\n")
+                        print(f"{Colors.RED}✗ Bot is disabled{Colors.END}\n")
                         time.sleep(2)
                         continue
                     self.start_spam()
@@ -456,18 +433,18 @@ class NGLSpamTool:
                     self.toggle_bot()
                 
                 elif choice == '8':
-                    self.console.print("\n[magenta]Goodbye![/magenta]\n")
+                    print(f"\n{Colors.MAGENTA}Goodbye!{Colors.END}\n")
                     sys.exit(0)
                 
                 else:
-                    self.console.print("[red]✗ Invalid option[/red]\n")
+                    print(f"{Colors.RED}✗ Invalid option{Colors.END}\n")
                     time.sleep(1)
             
             except KeyboardInterrupt:
-                self.console.print("\n[magenta]Goodbye![/magenta]\n")
+                print(f"\n{Colors.MAGENTA}Goodbye!{Colors.END}\n")
                 sys.exit(0)
             except Exception as e:
-                self.console.print(f"[red]✗ Error: {e}[/red]\n")
+                print(f"{Colors.RED}✗ Error: {e}{Colors.END}\n")
                 time.sleep(2)
 
 if __name__ == '__main__':
