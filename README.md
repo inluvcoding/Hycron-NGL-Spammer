@@ -13,7 +13,7 @@ INSTALLATION:
 
 USAGE:
 
-python ngl_spam_tool.py
+python tool.py
 
 ═══════════════════════════════════════════════════════════
 
