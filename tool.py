@@ -59,12 +59,25 @@ class NGLSpamTool:
 
     def load_custom_messages(self):
         try:
+            github_url = 'https://raw.githubusercontent.com/inluvcoding/Hycron-NGL-Spammer/refs/heads/main/messages.txt'
+            
+            try:
+                response = requests.get(github_url, timeout=10)
+                if response.status_code == 200:
+                    messages = [line.strip() for line in response.text.split('\n') if line.strip()]
+                    if messages:
+                        self.custom_messages = messages
+                        print(f"{Colors.CYAN}✓ Loaded {len(self.custom_messages)} messages from GitHub{Colors.END}")
+                        return True
+            except:
+                pass
+            
             if os.path.exists('messages.txt'):
                 with open('messages.txt', 'r', encoding='utf-8') as f:
                     messages = [line.strip() for line in f if line.strip()]
                 if messages:
                     self.custom_messages = messages
-                    print(f"{Colors.CYAN}✓ Loaded {len(self.custom_messages)} custom messages{Colors.END}")
+                    print(f"{Colors.CYAN}✓ Loaded {len(self.custom_messages)} messages from messages.txt{Colors.END}")
                     return True
                 else:
                     self.custom_messages = self.default_messages
@@ -313,8 +326,35 @@ class NGLSpamTool:
         time.sleep(2)
 
     def reload_messages(self):
-        self.load_custom_messages()
-        print(f"{Colors.GREEN}✓ Messages reloaded{Colors.END}\n")
+        print(f"\n{Colors.CYAN}⟳ Fetching messages from GitHub...{Colors.END}")
+        
+        github_url = 'https://raw.githubusercontent.com/inluvcoding/Hycron-NGL-Spammer/refs/heads/main/messages.txt'
+        
+        try:
+            response = requests.get(github_url, timeout=10)
+            if response.status_code == 200:
+                messages = [line.strip() for line in response.text.split('\n') if line.strip()]
+                if messages:
+                    self.custom_messages = messages
+                    print(f"{Colors.GREEN}✓ Loaded {len(self.custom_messages)} messages from GitHub{Colors.END}\n")
+                    time.sleep(2)
+                    return
+        except:
+            pass
+        
+        if os.path.exists('messages.txt'):
+            with open('messages.txt', 'r', encoding='utf-8') as f:
+                messages = [line.strip() for line in f if line.strip()]
+            if messages:
+                self.custom_messages = messages
+                print(f"{Colors.GREEN}✓ Loaded {len(self.custom_messages)} messages from local file{Colors.END}\n")
+            else:
+                self.custom_messages = self.default_messages
+                print(f"{Colors.YELLOW}⚠ Using default messages{Colors.END}\n")
+        else:
+            self.custom_messages = self.default_messages
+            print(f"{Colors.YELLOW}⚠ Using default messages{Colors.END}\n")
+        
         time.sleep(2)
 
     def load_proxies_menu(self):
@@ -331,19 +371,76 @@ class NGLSpamTool:
             time.sleep(1)
             return
         
-        print(f"\n{Colors.BOLD}{Colors.CYAN}═══════════════════════════════════════════════════{Colors.END}")
-        print(f"{Colors.BOLD}{Colors.CYAN}              ACTIVE SESSIONS{Colors.END}")
-        print(f"{Colors.BOLD}{Colors.CYAN}═══════════════════════════════════════════════════{Colors.END}\n")
+        live_update = True
+        while live_update:
+            try:
+                self.print_header()
+                
+                print(f"\n{Colors.BOLD}{Colors.CYAN}═══════════════════════════════════════════════════{Colors.END}")
+                print(f"{Colors.BOLD}{Colors.MAGENTA}          LIVE SESSIONS DASHBOARD{Colors.END}")
+                print(f"{Colors.BOLD}{Colors.CYAN}═══════════════════════════════════════════════════{Colors.END}\n")
+                
+                if not self.active_sessions:
+                    print(f"{Colors.YELLOW}No active sessions{Colors.END}\n")
+                    break
+                
+                session_count = 0
+                for session_id, session_data in list(self.active_sessions.items()):
+                    if not session_data['active'] and session_data['threads_completed'] >= session_data['threads']:
+                        continue
+                    
+                    session_count += 1
+                    elapsed = time.time() - session_data['start_time']
+                    remaining = max(0, session_data['end_time'] - time.time())
+                    
+                    minutes = int(remaining // 60)
+                    seconds = int(remaining % 60)
+                    
+                    rate = (session_data['sent'] / elapsed * 60) if elapsed > 0 else 0
+                    proxy_status = f"Enabled ({len(self.proxies)})" if self.use_proxy else "Disabled"
+                    status = f"{Colors.RED}🔴 SPAMMING{Colors.END}" if session_data['active'] else f"{Colors.GREEN}✅ COMPLETED{Colors.END}"
+                    
+                    progress_bar = self.create_progress_bar(elapsed, session_data['duration'] * 60)
+                    
+                    print(f"{Colors.BOLD}{Colors.YELLOW}[Session {session_count}]{Colors.END}")
+                    print(f"{Colors.BOLD}{Colors.MAGENTA}Target:{Colors.END} {Colors.CYAN}{session_data['username']}{Colors.END}")
+                    print(f"{Colors.BOLD}{Colors.MAGENTA}Duration:{Colors.END} {session_data['duration']}m | {Colors.BOLD}{Colors.MAGENTA}Threads:{Colors.END} {session_data['threads']}")
+                    print(f"{Colors.BOLD}{Colors.GREEN}✓ Sent:{Colors.END} {session_data['sent']} | {Colors.BOLD}{Colors.RED}✗ Errors:{Colors.END} {session_data['errors']}")
+                    print(f"{Colors.BOLD}{Colors.YELLOW}⏱ Time Left:{Colors.END} {minutes}m {seconds}s | {Colors.BOLD}{Colors.MAGENTA}Rate:{Colors.END} {rate:.1f}/min")
+                    print(f"{Colors.BOLD}{Colors.BLUE}🌐 Proxy:{Colors.END} {proxy_status}")
+                    print(f"{Colors.BOLD}{Colors.CYAN}Status:{Colors.END} {status}")
+                    print(f"{Colors.BOLD}{Colors.CYAN}Progress:{Colors.END} {progress_bar}")
+                    if session_data['last_error']:
+                        print(f"{Colors.BOLD}{Colors.RED}Last Error:{Colors.END} {session_data['last_error']}")
+                    print(f"{Colors.CYAN}{'─' * 50}{Colors.END}\n")
+                
+                if session_count == 0:
+                    print(f"{Colors.YELLOW}No active sessions{Colors.END}\n")
+                    time.sleep(2)
+                    break
+                
+                print(f"{Colors.YELLOW}[Press Ctrl+C to return to menu]{Colors.END}")
+                time.sleep(2)
+            
+            except KeyboardInterrupt:
+                print(f"\n{Colors.GREEN}✓ Returning to menu...{Colors.END}\n")
+                time.sleep(1)
+                break
+            except Exception as e:
+                print(f"{Colors.RED}Error: {e}{Colors.END}")
+                time.sleep(2)
+                break
+
+    def create_progress_bar(self, elapsed, total):
+        if total <= 0:
+            return ""
         
-        print(f"{Colors.BOLD}{Colors.CYAN}{'Username':<20} {'Sent':<10} {'Errors':<10} {'Status':<15}{Colors.END}")
-        print(f"{Colors.CYAN}─────────────────────────────────────────────────{Colors.END}")
+        percent = min(100, (elapsed / total) * 100)
+        filled = int(percent / 5)
+        empty = 20 - filled
         
-        for session_data in self.active_sessions.values():
-            status = f"{Colors.RED}🔴 Active{Colors.END}" if session_data['active'] else f"{Colors.GREEN}🟢 Done{Colors.END}"
-            print(f"{session_data['username']:<20} {session_data['sent']:<10} {session_data['errors']:<10} {status:<15}")
-        
-        print()
-        time.sleep(2)
+        bar = f"{Colors.GREEN}{'█' * filled}{Colors.RED}{'░' * empty}{Colors.END}"
+        return f"{bar} {percent:.0f}%"
 
     def show_help(self):
         print(f"""{Colors.BOLD}{Colors.CYAN}
