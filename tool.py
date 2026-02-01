@@ -10,12 +10,10 @@ from collections import defaultdict
 
 try:
     import aiohttp
-    import aiofiles
 except ImportError:
-    print("Installing required packages...")
-    os.system('pip install aiohttp aiofiles requests -q')
-    import aiohttp
-    import aiofiles
+    print("Error: aiohttp not installed")
+    print("Run: pip install aiohttp requests")
+    sys.exit(1)
 
 class Colors:
     MAGENTA = '\033[95m'
